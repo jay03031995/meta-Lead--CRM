@@ -30,7 +30,10 @@ function getEnv() {
     metaLoginConfigId: process.env.META_LOGIN_CONFIG_ID,
     metaGraphVersion: process.env.META_GRAPH_VERSION || "v20.0",
     metaTokenEncryptionKey: process.env.META_TOKEN_ENCRYPTION_KEY,
-    metaVerifyToken: process.env.META_VERIFY_TOKEN
+    metaVerifyToken: process.env.META_VERIFY_TOKEN,
+    metaSystemUserToken: process.env.META_ACCESS_TOKEN,
+    whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
+    whatsappBusinessAccountId: process.env.WHATSAPP_BUSINESS_ACCOUNT_ID
   };
 }
 

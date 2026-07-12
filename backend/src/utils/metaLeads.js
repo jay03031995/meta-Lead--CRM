@@ -28,4 +28,25 @@ async function upsertMetaLead({ organizationId, clientId, externalId, fieldData,
   );
 }
 
-module.exports = { fieldValue, upsertMetaLead };
+async function upsertWhatsAppAdLead({ organizationId, clientId, externalId, phone, name, message, campaignId, receivedAt }) {
+  await Lead.findOneAndUpdate(
+    { organizationId, externalId },
+    {
+      $setOnInsert: {
+        organizationId,
+        clientId: clientId || "unassigned",
+        externalId,
+        name: name || "WhatsApp Lead",
+        phone: phone || "",
+        source: "WhatsApp Click-to-Chat Ad",
+        campaign: campaignId || "",
+        intent: message || "",
+        received: receivedAt || new Date(),
+        rawSource: { phone, name, message, campaignId }
+      }
+    },
+    { upsert: true, setDefaultsOnInsert: true }
+  );
+}
+
+module.exports = { fieldValue, upsertMetaLead, upsertWhatsAppAdLead };

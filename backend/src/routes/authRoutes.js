@@ -6,6 +6,7 @@ const { validate } = require("../middleware/validate");
 const { loginSchema, registerOrganizationSchema } = require("../validators/authSchemas");
 const { startMetaLogin, metaCallback, metaStatus } = require("../controllers/metaAuthController");
 const { syncLeadsNow } = require("../controllers/metaSyncController");
+const { registerWhatsAppAccount } = require("../controllers/whatsappAuthController");
 const { requirePermission } = require("../middleware/rbac");
 
 const router = express.Router();
@@ -19,5 +20,6 @@ router.get("/meta/start", requireAuth, requirePermission("canManageMeta"), async
 router.get("/meta/callback", requireAuth, requirePermission("canManageMeta"), asyncHandler(metaCallback));
 router.get("/meta/status", requireAuth, asyncHandler(metaStatus));
 router.post("/meta/sync", requireAuth, requirePermission("canManageMeta"), asyncHandler(syncLeadsNow));
+router.post("/whatsapp/register", requireAuth, requirePermission("canManageMeta"), asyncHandler(registerWhatsAppAccount));
 
 module.exports = router;
