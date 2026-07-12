@@ -24,11 +24,14 @@ function startMetaLogin(req, res) {
   const params = new URLSearchParams({
     client_id: env.metaAppId,
     redirect_uri: callbackUrl(env),
-    scope: scopes.join(","),
     response_type: "code",
     state
   });
-  if (env.metaLoginConfigId) params.set("config_id", env.metaLoginConfigId);
+  if (env.metaLoginConfigId) {
+    params.set("config_id", env.metaLoginConfigId);
+  } else {
+    params.set("scope", scopes.join(","));
+  }
   res.redirect(`https://www.facebook.com/${env.metaGraphVersion}/dialog/oauth?${params}`);
 }
 
