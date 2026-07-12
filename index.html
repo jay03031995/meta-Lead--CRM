@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meta Leads Command Center</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <section id="authScreen" class="auth-screen">
+      <div class="auth-shell">
+        <section class="auth-visual">
+          <div class="auth-brand"><div class="brand-mark">M</div><strong>Meta Leads CRM</strong></div>
+          <div class="auth-visual-copy"><span>Agency command center</span><h2>Turn every Meta lead into a clear next action.</h2><p>Connect accounts, route enquiries, collaborate with clients, and keep every opportunity moving.</p></div>
+          <img src="./assets/auth-leads-illustration.png" alt="Agency team organizing incoming leads in a CRM pipeline" />
+          <div class="auth-proof"><span><strong>10+</strong> accounts</span><span><strong>Live</strong> lead sync</span><span><strong>One</strong> client portal</span></div>
+        </section>
+        <div class="auth-panel">
+          <div class="auth-mobile-brand"><div class="brand-mark">M</div><strong>Meta Leads CRM</strong></div>
+          <p class="eyebrow">Welcome to Meta Leads</p>
+          <h1 id="authTitle">Sign in</h1>
+          <p id="authSubtitle" class="muted">Access your live leads and client accounts.</p>
+          <div class="social-auth" aria-label="Social sign in options">
+            <button type="button" data-social="Google"><b>G</b><span>Google</span></button>
+            <button type="button" data-social="Meta"><b>f</b><span>Meta</span></button>
+            <button type="button" data-social="Apple"><b>●</b><span>Apple</span></button>
+          </div>
+          <div class="auth-divider"><span>or continue with email</span></div>
+          <form id="authForm" class="auth-form">
+            <div id="registerFields" hidden>
+              <label><span>Agency name</span><div class="input-wrap"><i data-static-icon="building"></i><input id="organizationName" autocomplete="organization" placeholder="Your agency" /></div></label>
+              <label><span>Full name</span><div class="input-wrap"><i data-static-icon="users"></i><input id="authName" autocomplete="name" placeholder="Jay Sharma" /></div></label>
+            </div>
+            <label><span>Email address</span><div class="input-wrap"><i data-static-icon="mail"></i><input id="authEmail" type="email" autocomplete="email" required placeholder="you@agency.com" /></div></label>
+            <label><span>Password</span><div class="input-wrap"><i data-static-icon="lock"></i><input id="authPassword" type="password" autocomplete="current-password" minlength="8" required placeholder="Minimum 8 characters" /><button id="passwordToggle" type="button" aria-label="Show password" data-static-icon="eye"></button></div></label>
+            <div id="loginOptions" class="login-options"><label><input type="checkbox" checked /> Remember me</label><button type="button">Forgot password?</button></div>
+            <p id="authError" class="auth-error" role="alert"></p>
+            <button id="authSubmit" class="primary-btn auth-submit" type="submit">Sign in</button>
+          </form>
+          <p class="auth-switch"><span id="authSwitchPrompt">New to Meta Leads?</span> <button id="authModeToggle" type="button">Create an account</button></p>
+          <p class="auth-terms">By continuing, you agree to the Terms of Service and Privacy Policy.</p>
+        </div>
+      </div>
+    </section>
+    <div id="appShell" class="app-shell" hidden>
+      <aside class="sidebar" aria-label="Primary">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">M</div>
+          <div>
+            <strong>Meta Leads CRM</strong>
+            <span>Agency dashboard</span>
+          </div>
+        </div>
+        <nav id="nav" class="nav"></nav>
+        <div class="help-card">
+          <strong>Need Help?</strong>
+          <p>Check our help docs or contact support team.</p>
+          <button class="secondary-btn" type="button">Visit Help Center ↗</button>
+        </div>
+        <div class="role-card">
+          <div class="profile-row">
+            <div class="avatar" aria-hidden="true">JS</div>
+            <div>
+              <strong>Jay Sharma</strong>
+              <span id="profileRole">Super Admin</span>
+            </div>
+          </div>
+          <label for="roleSelect">Active role</label>
+          <select id="roleSelect">
+            <option value="superAdmin">Super Admin</option>
+            <option value="accountManager">Admin</option>
+            <option value="sales">Team Member</option>
+            <option value="clientAdmin">Client User</option>
+            <option value="clientViewer">Client Viewer</option>
+          </select>
+          <p id="roleHelp">Full workspace access with administrative controls.</p>
+          <button id="logoutBtn" class="secondary-btn logout-btn" type="button" title="Sign out" aria-label="Sign out">Sign out</button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <h1 id="pageTitle" class="sr-only">Home</h1>
+          <div class="topbar-actions">
+            <label class="search">
+              <span aria-hidden="true" data-static-icon="search"></span>
+              <input id="globalSearch" type="search" placeholder="Search leads, campaigns, users..." />
+            </label>
+            <label class="top-filter">
+              <span aria-hidden="true" data-static-icon="briefcase"></span>
+              <select id="clientFilter"></select>
+            </label>
+            <label class="top-filter">
+              <span aria-hidden="true" data-static-icon="mapPin"></span>
+              <select id="assetFilter">
+                <option value="all">All Locations</option>
+              </select>
+            </label>
+            <label class="top-filter">
+              <span aria-hidden="true" data-static-icon="calendar"></span>
+              <select id="rangeFilter">
+                <option value="7">May 1 - May 31, 2025</option>
+                <option value="14">Last 14 days</option>
+                <option value="30">Last 30 days</option>
+              </select>
+            </label>
+            <button class="icon-top" type="button" aria-label="Notifications"><span>8</span><i data-static-icon="bell"></i></button>
+            <button id="metaConnectBtn" class="sr-only" type="button">Connect Meta</button>
+            <button id="mockLeadBtn" class="sr-only" type="button">Ingest test lead</button>
+            <div class="top-avatar" aria-hidden="true">JS</div>
+          </div>
+        </header>
+        <div class="live-chip sr-only" id="liveChip"><span></span> Realtime on</div>
+        <div class="health-pill sr-only" id="healthPill">Webhook healthy</div>
+
+        <section id="view" class="view" aria-live="polite"></section>
+      </main>
+
+      <aside id="detailPanel" class="detail-panel" aria-label="Lead detail" aria-hidden="true"></aside>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
+
+    <script src="./app.js?v=20260712-1608"></script>
+  </body>
+</html>
