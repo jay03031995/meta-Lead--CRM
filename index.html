@@ -44,6 +44,7 @@
       </div>
     </section>
     <div id="appShell" class="app-shell" hidden>
+      <div id="sidebarBackdrop" class="sidebar-backdrop" hidden></div>
       <aside class="sidebar" aria-label="Primary">
         <div class="brand">
           <div class="brand-mark" aria-hidden="true">M</div>
@@ -82,6 +83,9 @@
       <main class="main">
         <header class="topbar">
           <h1 id="pageTitle" class="sr-only">Home</h1>
+          <button id="sidebarToggle" class="sidebar-toggle-btn" type="button" aria-label="Open menu">
+            <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
           <div class="topbar-actions">
             <label class="search">
               <span aria-hidden="true" data-static-icon="search"></span>

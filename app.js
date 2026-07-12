@@ -1645,11 +1645,23 @@ function exportSafeCsv() {
   return [keys.join(","), ...rows.map((row) => keys.map((key) => `"${String(row[key]).replaceAll('"', '""')}"`).join(","))].join("\n");
 }
 
+function closeMobileSidebar() {
+  $("#appShell").classList.remove("sidebar-open");
+  $("#sidebarBackdrop").hidden = true;
+}
+
+$("#sidebarToggle").addEventListener("click", () => {
+  const isOpen = $("#appShell").classList.toggle("sidebar-open");
+  $("#sidebarBackdrop").hidden = !isOpen;
+});
+$("#sidebarBackdrop").addEventListener("click", closeMobileSidebar);
+
 document.addEventListener("click", (event) => {
   const navButton = event.target.closest("[data-view]");
   if (navButton) {
     activeView = navButton.dataset.view;
     render();
+    closeMobileSidebar();
   }
   if (!event.target.closest(".more-wrap")) document.querySelectorAll(".more-menu").forEach((menu) => { menu.hidden = true; });
 });
