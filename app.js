@@ -125,6 +125,7 @@ function localDemoApi(path, options = {}) {
     return { user: savedUser, demoMode: true };
   }
   if (path === "/leads") return { leads: [] };
+  if (path === "/auth/meta/status") return { connection: { connected: false } };
   throw new Error("This feature requires the MongoDB API at http://localhost:4000.");
 }
 
@@ -150,8 +151,17 @@ function applyAuthenticatedUser(user) {
 
 async function loadRealWorkspaceData() {
   try {
-    const result = await api("/leads");
+    const [result, metaResult] = await Promise.all([api("/leads"), api("/auth/meta/status")]);
     leads = (result.leads || []).map(normalizeApiLead);
+    if (metaResult.connection?.connected) {
+      metaConnection = {
+        connected: true,
+        appId: "Configured on server",
+        business: metaResult.connection.business || "Meta account",
+        tokenStatus: "Connected",
+        lastSync: metaResult.connection.lastSync ? new Date(metaResult.connection.lastSync).toLocaleString() : "Connected"
+      };
+    }
     render();
   } catch (error) {
     leads = [];
@@ -1518,9 +1528,9 @@ function openMetaConnectionPanel() {
       </section>
       <section class="card pad">
         <h3>Meta App Setup</h3>
-        <p class="notice">Only the Meta App ID is safe to type into this local UI. App Secret, access tokens, verify token, Page ID, Business ID and Ad Account ID must stay in backend environment variables.</p>
+        <p class="notice">Meta App credentials and access tokens are read from backend environment variables. They are never exposed to browser JavaScript.</p>
         <div class="form-grid">
-          <label>Meta App ID<input id="metaAppId" placeholder="Paste Meta App ID" value="${metaConnection.appId}" /></label>
+          <label>Meta App ID<input id="metaAppId" value="Configured on server" readonly /></label>
           <label>Redirect URI<input id="metaRedirectUri" value="https://crm.genesisvirtue.com/api/auth/meta/callback" /></label>
           <label class="full">Required scopes<input value="pages_show_list, pages_read_engagement, pages_manage_metadata, leads_retrieval, business_management, ads_read" readonly /></label>
         </div>
@@ -1562,18 +1572,8 @@ META_AD_ACCOUNT_ID=selected_ad_account_id</pre>
 }
 
 function launchMetaOAuth() {
-  const appId = $("#metaAppId")?.value.trim();
-  const redirectUri = $("#metaRedirectUri")?.value.trim();
-  if (!appId) {
-    showToast("Add your Meta App ID first");
-    return;
-  }
-  metaConnection.appId = appId;
-  const scopes = ["pages_show_list", "pages_read_engagement", "pages_manage_metadata", "leads_retrieval", "business_management", "ads_read"].join(",");
-  const oauthUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${encodeURIComponent(appId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&response_type=code&state=metaleads-local-demo`;
   audit.unshift("Meta OAuth launched for agency workspace");
-  showToast("Opening Meta OAuth");
-  window.open(oauthUrl, "_blank");
+  window.location.assign(`${API_BASE}/auth/meta/start`);
 }
 
 function completeDemoMetaConnection() {
@@ -1692,4 +1692,8 @@ window.metaLeadsApp = { exportSafeCsv, visibleLeads };
 
 setAuthMode("login");
 hydrateStaticIcons();
+if (new URLSearchParams(window.location.search).get("meta") === "connected") {
+  window.history.replaceState({}, "", window.location.pathname);
+  showToast("Meta account connected");
+}
 restoreSession();

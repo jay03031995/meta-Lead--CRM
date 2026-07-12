@@ -24,7 +24,11 @@ function getEnv() {
     accessTokenTtl: process.env.ACCESS_TOKEN_TTL || "15m",
     refreshTokenTtl: process.env.REFRESH_TOKEN_TTL || "7d",
     cookieSecure: process.env.COOKIE_SECURE === "true",
-    cookieDomain: process.env.COOKIE_DOMAIN || undefined
+    cookieDomain: process.env.COOKIE_DOMAIN || undefined,
+    metaAppId: process.env.META_APP_ID,
+    metaAppSecret: process.env.META_APP_SECRET,
+    metaGraphVersion: process.env.META_GRAPH_VERSION || "v20.0",
+    metaTokenEncryptionKey: process.env.META_TOKEN_ENCRYPTION_KEY
   };
 }
 
