@@ -26,6 +26,7 @@ async function syncLeadsNow(req, res) {
 
   let formsScanned = 0;
   let leadsProcessed = 0;
+  const errors = [];
 
   for (const page of pages) {
     const pageAccessToken = decryptSecret(page.encryptedPageAccessToken);
@@ -36,7 +37,7 @@ async function syncLeadsNow(req, res) {
         `https://graph.facebook.com/${env.metaGraphVersion}/${page.pageId}/leadgen_forms?fields=id,name&access_token=${encodeURIComponent(pageAccessToken)}`
       );
     } catch (error) {
-      console.error(`Meta sync: failed to list forms for page ${page.pageId}`, error.message);
+      errors.push(`${page.pageName || page.pageId}: ${error.message}`);
       continue;
     }
 
@@ -48,7 +49,7 @@ async function syncLeadsNow(req, res) {
           `https://graph.facebook.com/${env.metaGraphVersion}/${form.id}/leads?fields=field_data,created_time,ad_id,campaign_id&access_token=${encodeURIComponent(pageAccessToken)}`
         );
       } catch (error) {
-        console.error(`Meta sync: failed to list leads for form ${form.id}`, error.message);
+        errors.push(`${form.name || form.id}: ${error.message}`);
         continue;
       }
 
@@ -69,7 +70,7 @@ async function syncLeadsNow(req, res) {
     await MetaPage.updateOne({ _id: page._id }, { $set: { lastLeadAt: new Date() } });
   }
 
-  res.json({ pagesScanned: pages.length, formsScanned, leadsProcessed });
+  res.json({ pagesScanned: pages.length, formsScanned, leadsProcessed, errors });
 }
 
 module.exports = { syncLeadsNow };

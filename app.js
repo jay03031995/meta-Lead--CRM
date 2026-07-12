@@ -174,7 +174,12 @@ async function syncMetaLeadsNow() {
   showToast("Syncing leads from Meta...");
   try {
     const result = await api("/auth/meta/sync", { method: "POST" });
-    showToast(`Synced ${result.leadsProcessed} lead(s) from ${result.formsScanned} form(s)`);
+    if (result.errors?.length) {
+      console.error("Meta sync errors:", result.errors);
+      showToast(`Synced ${result.leadsProcessed} lead(s), ${result.errors.length} error(s) — see console`);
+    } else {
+      showToast(`Synced ${result.leadsProcessed} lead(s) from ${result.formsScanned} form(s)`);
+    }
     await loadRealWorkspaceData();
   } catch (error) {
     showToast(error.message || "Meta sync failed");
