@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const MetaConnection = require("../models/MetaConnection");
+const MetaPage = require("../models/MetaPage");
 const { getEnv } = require("../config/env");
 const { encryptSecret } = require("../utils/encryption");
 const { httpError } = require("../utils/httpError");
@@ -33,6 +34,36 @@ function startMetaLogin(req, res) {
     params.set("scope", scopes.join(","));
   }
   res.redirect(`https://www.facebook.com/${env.metaGraphVersion}/dialog/oauth?${params}`);
+}
+
+async function syncPages(env, organizationId, userAccessToken) {
+  const pagesResponse = await fetch(
+    `https://graph.facebook.com/${env.metaGraphVersion}/me/accounts?fields=id,name,access_token&access_token=${encodeURIComponent(userAccessToken)}`
+  );
+  const pagesData = await pagesResponse.json();
+  if (!pagesResponse.ok) throw new Error(pagesData.error?.message || "Failed to list Meta Pages");
+
+  for (const page of pagesData.data || []) {
+    await MetaPage.findOneAndUpdate(
+      { organizationId, pageId: page.id },
+      {
+        organizationId,
+        pageId: page.id,
+        pageName: page.name,
+        encryptedPageAccessToken: encryptSecret(page.access_token)
+      },
+      { upsert: true, new: true, runValidators: true }
+    );
+
+    const subscribeResponse = await fetch(
+      `https://graph.facebook.com/${env.metaGraphVersion}/${page.id}/subscribed_apps?subscribed_fields=leadgen&access_token=${encodeURIComponent(page.access_token)}`,
+      { method: "POST" }
+    );
+    const subscribeData = await subscribeResponse.json();
+    if (subscribeResponse.ok && subscribeData.success) {
+      await MetaPage.updateOne({ organizationId, pageId: page.id }, { $set: { subscribed: true } });
+    }
+  }
 }
 
 async function metaCallback(req, res) {
@@ -69,14 +100,24 @@ async function metaCallback(req, res) {
     },
     { upsert: true, new: true, runValidators: true }
   );
+
+  try {
+    await syncPages(env, req.user.organizationId, tokenData.access_token);
+  } catch (error) {
+    console.error("Meta page discovery/subscription failed", error);
+  }
+
   res.clearCookie("metaOAuthState", { path: "/api/auth/meta" });
   res.redirect(`${env.appOrigin}/?meta=connected`);
 }
 
 async function metaStatus(req, res) {
   const connection = await MetaConnection.findOne({ organizationId: req.user.organizationId }).lean();
+  const pagesConnected = await MetaPage.countDocuments({ organizationId: req.user.organizationId, subscribed: true });
   res.json({
-    connection: connection ? { connected: connection.status === "connected", business: connection.metaUserName || "Meta account", lastSync: connection.lastSyncAt } : { connected: false }
+    connection: connection
+      ? { connected: connection.status === "connected", business: connection.metaUserName || "Meta account", lastSync: connection.lastSyncAt, pagesConnected }
+      : { connected: false, pagesConnected: 0 }
   });
 }
 
