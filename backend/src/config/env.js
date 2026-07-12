@@ -8,10 +8,16 @@ function getEnv() {
     throw new Error(`Missing required env vars: ${missing.join(", ")}`);
   }
 
+  const normalizeOrigin = (value) => value ? value.replace(/\/$/, "") : undefined;
+  const vercelOrigins = [process.env.VERCEL_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL]
+    .filter(Boolean)
+    .map((host) => normalizeOrigin(host.startsWith("http") ? host : `https://${host}`));
+
   return {
     nodeEnv: process.env.NODE_ENV || "development",
     port: Number(process.env.PORT || 4000),
-    appOrigin: process.env.APP_ORIGIN || "http://localhost:5173",
+    appOrigin: normalizeOrigin(process.env.APP_ORIGIN || "http://localhost:5173"),
+    allowedOrigins: [...new Set(vercelOrigins)],
     mongoUri: process.env.MONGODB_URI,
     jwtAccessSecret: process.env.JWT_ACCESS_SECRET,
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,

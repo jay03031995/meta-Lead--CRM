@@ -16,7 +16,8 @@ function createApp() {
   app.use(
     cors({
       origin(origin, callback) {
-        const allowed = !origin || origin === env.appOrigin || (env.nodeEnv !== "production" && origin === "null");
+        const normalizedOrigin = origin?.replace(/\/$/, "");
+        const allowed = !origin || normalizedOrigin === env.appOrigin || env.allowedOrigins.includes(normalizedOrigin) || (env.nodeEnv !== "production" && origin === "null");
         callback(allowed ? null : new Error("Origin not allowed"), allowed);
       },
       credentials: true
@@ -27,12 +28,14 @@ function createApp() {
   app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
 
   app.use("/api", routes);
-  const frontendDir = path.resolve(__dirname, "../..");
-  app.use(express.static(frontendDir));
-  app.get("*", (req, res, next) => {
-    if (req.path.startsWith("/api/")) return next();
-    return res.sendFile(path.join(frontendDir, "index.html"));
-  });
+  if (env.nodeEnv !== "production") {
+    const frontendDir = path.resolve(__dirname, "../..");
+    app.use(express.static(frontendDir));
+    app.get("*", (req, res, next) => {
+      if (req.path.startsWith("/api/")) return next();
+      return res.sendFile(path.join(frontendDir, "index.html"));
+    });
+  }
   app.use(notFound);
   app.use(errorHandler);
 
