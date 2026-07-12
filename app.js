@@ -1,4 +1,4 @@
-const clients = [{ id: "all", name: "All Accounts" }];
+let clients = [{ id: "all", name: "All Accounts" }];
 const users = [];
 const assets = [{ id: "all", name: "All Locations", clientId: "all" }];
 const clientAccess = [];
@@ -125,6 +125,7 @@ function localDemoApi(path, options = {}) {
     return { user: savedUser, demoMode: true };
   }
   if (path === "/leads") return { leads: [] };
+  if (path === "/clients") return { clients: [] };
   if (path === "/auth/meta/status") return { connection: { connected: false } };
   throw new Error("This feature requires the MongoDB API at http://localhost:4000.");
 }
@@ -151,8 +152,9 @@ function applyAuthenticatedUser(user) {
 
 async function loadRealWorkspaceData() {
   try {
-    const [result, metaResult] = await Promise.all([api("/leads"), api("/auth/meta/status")]);
+    const [result, metaResult, clientsResult] = await Promise.all([api("/leads"), api("/auth/meta/status"), api("/clients")]);
     leads = (result.leads || []).map(normalizeApiLead);
+    clients = [{ id: "all", name: "All Accounts" }, ...(clientsResult.clients || []).map((client) => ({ id: client.id, name: client.name }))];
     if (metaResult.connection?.connected) {
       metaConnection = {
         connected: true,
@@ -1022,7 +1024,7 @@ function renderAdmin() {
       <section class="card pad">
         <h2>Admin Panel</h2>
         <div class="admin-grid">
-          ${["User management", "Role management", "Permission management", "Client management", "Meta account management", "Campaign mapping", "Lead stage configuration", "Lead bucket configuration", "WhatsApp templates", "Follow-up rules", "Email digests", "Audit logs", "Branding settings"].map((item) => `<button class="nav-card compact" type="button"><strong>${item}</strong><span>Configure</span></button>`).join("")}
+          ${["User management", "Role management", "Permission management", "Client management", "Meta account management", "Campaign mapping", "Lead stage configuration", "Lead bucket configuration", "WhatsApp templates", "Follow-up rules", "Email digests", "Audit logs", "Branding settings"].map((item) => `<button class="nav-card compact" type="button" data-admin-card="${item}"><strong>${item}</strong><span>Configure</span></button>`).join("")}
         </div>
       </section>
       <section class="card pad">
@@ -1331,6 +1333,8 @@ function bindDynamicEvents() {
   if (connect) connect.addEventListener("click", connectMeta);
   const syncNow = $("#syncMetaLeadsNow");
   if (syncNow) syncNow.addEventListener("click", syncMetaLeadsNow);
+  const clientMgmtCard = document.querySelector('[data-admin-card="Client management"]');
+  if (clientMgmtCard) clientMgmtCard.addEventListener("click", openClientManagementPanel);
   const launchOAuth = $("#launchMetaOAuth");
   if (launchOAuth) launchOAuth.addEventListener("click", launchMetaOAuth);
   const demoMeta = $("#demoMetaConnect");
@@ -1590,6 +1594,54 @@ META_AD_ACCOUNT_ID=selected_ad_account_id</pre>
   $("#closePanel").addEventListener("click", closeLead);
   $("#launchMetaOAuth").addEventListener("click", launchMetaOAuth);
   $("#demoMetaConnect").addEventListener("click", completeDemoMetaConnection);
+}
+
+function openClientManagementPanel() {
+  const panel = $("#detailPanel");
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div>
+        <p class="eyebrow">Settings</p>
+        <h2>Client management</h2>
+        <p class="muted">Create client workspaces so Meta sources and leads can be routed to the right account.</p>
+      </div>
+      <button class="icon-btn" type="button" id="closePanel" aria-label="Close detail">×</button>
+    </div>
+    <div class="stack">
+      <section class="card pad">
+        <h3>Existing clients</h3>
+        <div class="metric-list">
+          ${clients.filter((client) => client.id !== "all").map((client) => `<div class="metric-row"><span>${client.name}</span><strong>${client.status || "active"}</strong></div>`).join("") || '<p class="muted">No clients yet. Add the first one below.</p>'}
+        </div>
+      </section>
+      <section class="card pad">
+        <h3>Add client</h3>
+        <div class="form-grid">
+          <label>Client name<input id="newClientName" placeholder="e.g. Northstar Dental" /></label>
+          <label>Locations (comma separated)<input id="newClientLocations" placeholder="Austin, San Jose" /></label>
+        </div>
+        <button class="primary-btn" type="button" id="submitNewClient" style="margin-top:12px">Add client</button>
+      </section>
+    </div>
+  `;
+  panel.classList.add("open");
+  panel.setAttribute("aria-hidden", "false");
+  $("#closePanel").addEventListener("click", closeLead);
+  $("#submitNewClient").addEventListener("click", submitNewClient);
+}
+
+async function submitNewClient() {
+  const name = $("#newClientName").value.trim();
+  if (!name) return showToast("Client name is required");
+  const locations = $("#newClientLocations").value.split(",").map((loc) => loc.trim()).filter(Boolean);
+  try {
+    await api("/clients", { method: "POST", body: JSON.stringify({ name, locations }) });
+    showToast(`${name} added`);
+    await loadRealWorkspaceData();
+    openClientManagementPanel();
+  } catch (error) {
+    showToast(error.message || "Could not add client");
+  }
 }
 
 function launchMetaOAuth() {
