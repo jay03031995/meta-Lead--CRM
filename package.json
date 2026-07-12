@@ -7,8 +7,8 @@
     "node": ">=20"
   },
   "scripts": {
-    "start": "node backend/src/server.js",
-    "check": "node --check app.js && node --check api/index.js"
+    "start": "node server.js",
+    "check": "node --check app.js && node --check server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

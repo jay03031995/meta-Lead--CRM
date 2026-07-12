@@ -33,7 +33,7 @@ On macOS, you can also double-click `start-backend.command` in the parent projec
 
 Use `.env.vercel.example` as the variable checklist in Vercel Project Settings > Environment Variables. Set `APP_ORIGIN` to the final HTTPS Vercel domain, enable `COOKIE_SECURE`, and generate unique JWT secrets. Do not upload `.env` or commit production credentials.
 
-The repository includes `api/index.js`, `api/[...path].js`, a root `package.json`, and `vercel.json`. These expose the Express routes as Vercel Functions while the dashboard remains static. After changing environment variables, redeploy the project and verify `https://YOUR_DOMAIN/api/health` returns JSON before testing signup or login.
+The repository includes a root `server.js`, `package.json`, and `vercel.json`. Vercel detects the Express server entrypoint and serves both the dashboard and API from one origin. After changing environment variables, redeploy the project and verify `https://YOUR_DOMAIN/api/health` returns JSON before testing signup or login.
 
 ## Endpoints
 

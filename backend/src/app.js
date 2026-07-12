@@ -5,6 +5,7 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const path = require("path");
 const { getEnv } = require("./config/env");
+const { connectDb } = require("./config/db");
 const routes = require("./routes");
 const { errorHandler, notFound } = require("./middleware/errorHandler");
 
@@ -27,15 +28,23 @@ function createApp() {
   app.use(cookieParser());
   app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
 
+  app.use("/api", async (req, res, next) => {
+    if (req.path === "/health") return next();
+    try {
+      await connectDb();
+      return next();
+    } catch (error) {
+      console.error("Database connection failed", error);
+      return res.status(503).json({ error: { message: "Database connection unavailable" } });
+    }
+  });
   app.use("/api", routes);
-  if (env.nodeEnv !== "production") {
-    const frontendDir = path.resolve(__dirname, "../..");
-    app.use(express.static(frontendDir));
-    app.get("*", (req, res, next) => {
-      if (req.path.startsWith("/api/")) return next();
-      return res.sendFile(path.join(frontendDir, "index.html"));
-    });
-  }
+  const frontendDir = path.resolve(__dirname, "../..");
+  app.use(express.static(frontendDir));
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api/")) return next();
+    return res.sendFile(path.join(frontendDir, "index.html"));
+  });
   app.use(notFound);
   app.use(errorHandler);
 

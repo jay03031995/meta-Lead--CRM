@@ -134,8 +134,13 @@ async function api(path, options = {}) {
     throw error;
   }
   if (response.status === 204) return null;
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.error?.message || payload.message || "Request failed");
+  const rawBody = await response.text();
+  let payload = {};
+  try { payload = rawBody ? JSON.parse(rawBody) : {}; } catch { payload = {}; }
+  if (!response.ok) {
+    const message = payload.error?.message || payload.message || `API error ${response.status}`;
+    throw new Error(message);
+  }
   return payload;
 }
 
