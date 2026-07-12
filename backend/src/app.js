@@ -39,12 +39,14 @@ function createApp() {
     }
   });
   app.use("/api", routes);
-  const frontendDir = path.resolve(__dirname, "../..");
-  app.use(express.static(frontendDir));
-  app.get("*", (req, res, next) => {
-    if (req.path.startsWith("/api/")) return next();
-    return res.sendFile(path.join(frontendDir, "index.html"));
-  });
+  if (env.nodeEnv !== "production") {
+    const frontendDir = path.resolve(__dirname, "../..");
+    app.use(express.static(frontendDir));
+    app.get("*", (req, res, next) => {
+      if (req.path.startsWith("/api/")) return next();
+      return res.sendFile(path.join(frontendDir, "index.html"));
+    });
+  }
   app.use(notFound);
   app.use(errorHandler);
 
