@@ -170,6 +170,17 @@ async function loadRealWorkspaceData() {
   }
 }
 
+async function syncMetaLeadsNow() {
+  showToast("Syncing leads from Meta...");
+  try {
+    const result = await api("/auth/meta/sync", { method: "POST" });
+    showToast(`Synced ${result.leadsProcessed} lead(s) from ${result.formsScanned} form(s)`);
+    await loadRealWorkspaceData();
+  } catch (error) {
+    showToast(error.message || "Meta sync failed");
+  }
+}
+
 function normalizeApiLead(lead) {
   const received = new Date(lead.received || lead.createdAt || Date.now());
   return {
@@ -914,7 +925,10 @@ function renderAccounts() {
       <section class="card pad">
         <div class="toolbar">
           <h2>Connected Meta Assets</h2>
-          <button class="primary-btn" type="button" id="connectMetaInline">${metaConnection.connected ? "Manage Meta Login" : "Connect Meta Login"}</button>
+          <div class="toolbar-actions">
+            ${metaConnection.connected ? '<button class="secondary-btn" type="button" id="syncMetaLeadsNow">Sync Leads Now</button>' : ""}
+            <button class="primary-btn" type="button" id="connectMetaInline">${metaConnection.connected ? "Manage Meta Login" : "Connect Meta Login"}</button>
+          </div>
         </div>
         <p class="muted">One agency workspace can connect many Meta businesses, ad accounts, Pages and forms, then map each source to exactly one client portal.</p>
         <div class="mapping-list">
@@ -1310,6 +1324,8 @@ function bindDynamicEvents() {
   }
   const connect = $("#connectMetaInline");
   if (connect) connect.addEventListener("click", connectMeta);
+  const syncNow = $("#syncMetaLeadsNow");
+  if (syncNow) syncNow.addEventListener("click", syncMetaLeadsNow);
   const launchOAuth = $("#launchMetaOAuth");
   if (launchOAuth) launchOAuth.addEventListener("click", launchMetaOAuth);
   const demoMeta = $("#demoMetaConnect");

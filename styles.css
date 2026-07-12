@@ -422,6 +422,12 @@ h3 {
   font-size: 12px;
 }
 
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .toolbar {
   display: flex;
   align-items: center;

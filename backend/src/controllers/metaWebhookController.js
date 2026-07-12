@@ -1,8 +1,8 @@
 const crypto = require("crypto");
 const MetaPage = require("../models/MetaPage");
-const Lead = require("../models/Lead");
 const { getEnv } = require("../config/env");
 const { decryptSecret } = require("../utils/encryption");
+const { upsertMetaLead } = require("../utils/metaLeads");
 const { httpError } = require("../utils/httpError");
 
 function verifyMetaWebhook(req, res) {
@@ -26,12 +26,6 @@ function isValidSignature(env, req) {
   return expectedBuffer.length === signatureBuffer.length && crypto.timingSafeEqual(expectedBuffer, signatureBuffer);
 }
 
-function fieldValue(fieldData, ...names) {
-  const lowerNames = names.map((name) => name.toLowerCase());
-  const match = (fieldData || []).find((field) => lowerNames.includes(String(field.name).toLowerCase()));
-  return match?.values?.[0] || "";
-}
-
 async function ingestLeadgenEvent(env, value) {
   const page = await MetaPage.findOne({ pageId: value.page_id }).select("+encryptedPageAccessToken");
   if (!page) {
@@ -49,25 +43,15 @@ async function ingestLeadgenEvent(env, value) {
     return;
   }
 
-  await Lead.findOneAndUpdate(
-    { organizationId: page.organizationId, externalId: value.leadgen_id },
-    {
-      $setOnInsert: {
-        organizationId: page.organizationId,
-        clientId: page.clientId,
-        externalId: value.leadgen_id,
-        name: fieldValue(leadData.field_data, "full_name", "name") || "Meta Lead",
-        phone: fieldValue(leadData.field_data, "phone_number", "phone"),
-        email: fieldValue(leadData.field_data, "email"),
-        source: "Meta Lead Form",
-        campaign: leadData.campaign_id || "",
-        assetId: value.form_id || "",
-        received: leadData.created_time ? new Date(leadData.created_time) : new Date(),
-        rawSource: { value, leadData }
-      }
-    },
-    { upsert: true, setDefaultsOnInsert: true }
-  );
+  await upsertMetaLead({
+    organizationId: page.organizationId,
+    clientId: page.clientId,
+    externalId: value.leadgen_id,
+    fieldData: leadData.field_data,
+    createdTime: leadData.created_time,
+    campaignId: leadData.campaign_id,
+    formId: value.form_id
+  });
 
   await MetaPage.updateOne({ _id: page._id }, { $set: { lastLeadAt: new Date() } });
 }
