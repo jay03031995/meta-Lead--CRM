@@ -1521,8 +1521,8 @@ function openMetaConnectionPanel() {
         <p class="notice">Only the Meta App ID is safe to type into this local UI. App Secret, access tokens, verify token, Page ID, Business ID and Ad Account ID must stay in backend environment variables.</p>
         <div class="form-grid">
           <label>Meta App ID<input id="metaAppId" placeholder="Paste Meta App ID" value="${metaConnection.appId}" /></label>
-          <label>Redirect URI<input id="metaRedirectUri" value="https://your-domain.com/api/auth/meta/callback" /></label>
-          <label class="full">Required scopes<input value="pages_show_list, leads_retrieval, ads_read, business_management, instagram_basic" /></label>
+          <label>Redirect URI<input id="metaRedirectUri" value="https://crm.genesisvirtue.com/api/auth/meta/callback" /></label>
+          <label class="full">Required scopes<input value="pages_show_list, pages_read_engagement, pages_manage_metadata, leads_retrieval, business_management, ads_read" readonly /></label>
         </div>
         <div class="bulk-bar" style="margin-top:12px">
           <span>For local demo, use the demo connect button. For production, enter your App ID and launch OAuth.</span>
@@ -1537,7 +1537,7 @@ function openMetaConnectionPanel() {
 META_APP_SECRET=your_regenerated_app_secret
 META_BUSINESS_ID=your_business_id
 META_VERIFY_TOKEN=your_private_verify_token
-META_ACCESS_TOKEN=server_side_long_lived_token
+META_ACCESS_TOKEN=system_user_token_with_page_access
 META_PAGE_ID=selected_page_id
 META_AD_ACCOUNT_ID=selected_ad_account_id</pre>
         </div>
@@ -1547,7 +1547,7 @@ META_AD_ACCOUNT_ID=selected_ad_account_id</pre>
         <h3>Production Checklist</h3>
         <div class="timeline">
           <div class="timeline-item"><strong>Meta Developer App</strong><span>Add valid OAuth redirect URI and Lead Ads product.</span></div>
-          <div class="timeline-item"><strong>Permissions</strong><span>Request pages_show_list, leads_retrieval, ads_read and required business scopes.</span></div>
+          <div class="timeline-item"><strong>Permissions</strong><span>Request pages_show_list, pages_read_engagement, pages_manage_metadata, leads_retrieval, business_management and ads_read.</span></div>
           <div class="timeline-item"><strong>Webhook</strong><span>Configure callback URL, verify token and leadgen subscription.</span></div>
           <div class="timeline-item"><strong>Token storage</strong><span>Store encrypted long-lived tokens server-side, never in browser storage.</span></div>
         </div>
@@ -1569,7 +1569,7 @@ function launchMetaOAuth() {
     return;
   }
   metaConnection.appId = appId;
-  const scopes = ["pages_show_list", "leads_retrieval", "ads_read", "business_management", "instagram_basic"].join(",");
+  const scopes = ["pages_show_list", "pages_read_engagement", "pages_manage_metadata", "leads_retrieval", "business_management", "ads_read"].join(",");
   const oauthUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${encodeURIComponent(appId)}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&response_type=code&state=metaleads-local-demo`;
   audit.unshift("Meta OAuth launched for agency workspace");
   showToast("Opening Meta OAuth");

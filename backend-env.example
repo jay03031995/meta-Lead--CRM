@@ -3,7 +3,7 @@ META_APP_SECRET=your_regenerated_app_secret
 META_BUSINESS_ID=your_business_id
 
 META_VERIFY_TOKEN=your_private_webhook_verify_token
-META_ACCESS_TOKEN=server_side_long_lived_access_token
+META_ACCESS_TOKEN=system_user_token_with_page_and_ad_account_access
 META_PAGE_ID=selected_page_id
 META_AD_ACCOUNT_ID=selected_ad_account_id
 
