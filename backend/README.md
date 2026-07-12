@@ -56,7 +56,7 @@ The repository includes `api/index.js`, a root `package.json`, and an explicit `
 
 The production dashboard contains no seeded operational records. After authentication it loads organization-scoped leads from MongoDB. A new workspace therefore starts empty until records are created through `/api/leads` or ingested from a connected Meta source.
 
-Meta Login uses the server-side authorization-code flow. Configure `META_APP_ID`, `META_APP_SECRET`, `META_GRAPH_VERSION`, and `META_TOKEN_ENCRYPTION_KEY` in Vercel. The returned access token is encrypted before storage and is never returned to browser JavaScript.
+Meta Login uses the server-side authorization-code flow. Configure `META_APP_ID`, `META_APP_SECRET`, optional `META_LOGIN_CONFIG_ID`, `META_GRAPH_VERSION`, and `META_TOKEN_ENCRYPTION_KEY` in Vercel. The returned access token is encrypted before storage and is never returned to browser JavaScript.
 
 ## Roles
 

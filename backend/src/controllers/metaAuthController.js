@@ -28,6 +28,7 @@ function startMetaLogin(req, res) {
     response_type: "code",
     state
   });
+  if (env.metaLoginConfigId) params.set("config_id", env.metaLoginConfigId);
   res.redirect(`https://www.facebook.com/${env.metaGraphVersion}/dialog/oauth?${params}`);
 }
 

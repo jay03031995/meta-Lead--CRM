@@ -27,6 +27,7 @@ function getEnv() {
     cookieDomain: process.env.COOKIE_DOMAIN || undefined,
     metaAppId: process.env.META_APP_ID,
     metaAppSecret: process.env.META_APP_SECRET,
+    metaLoginConfigId: process.env.META_LOGIN_CONFIG_ID,
     metaGraphVersion: process.env.META_GRAPH_VERSION || "v20.0",
     metaTokenEncryptionKey: process.env.META_TOKEN_ENCRYPTION_KEY
   };
