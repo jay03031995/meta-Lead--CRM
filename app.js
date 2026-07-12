@@ -1,62 +1,9 @@
-const clients = [
-  { id: "all", name: "All Accounts" },
-  { id: "northstar", name: "Northstar Dental" },
-  { id: "evergreen", name: "Evergreen Med Spa" },
-  { id: "urbanfit", name: "UrbanFit Studio" },
-  { id: "aura", name: "Aura Aesthetics" },
-  { id: "summit", name: "Summit Roofing" },
-  { id: "brightpath", name: "BrightPath Academy" },
-  { id: "hearth", name: "Hearth Realty" },
-  { id: "primeauto", name: "Prime Auto Care" },
-  { id: "lotus", name: "Lotus IVF" },
-  { id: "bluebay", name: "Bluebay Travel" },
-  { id: "pinnacle", name: "Pinnacle Legal" }
-];
-
-const users = ["Maya Chen", "Arjun Mehta", "Sofia Alvarez", "Leo Grant", "Riya Kapoor", "Dev Sharma"];
-
-const assets = [
-  { id: "all", name: "All Locations", clientId: "all" },
-  { id: "ns-form-implant", name: "Implant consult form", clientId: "northstar" },
-  { id: "ns-page-main", name: "Northstar main Page", clientId: "northstar" },
-  { id: "eg-form-skin", name: "Skin assessment form", clientId: "evergreen" },
-  { id: "eg-msg-ig", name: "Instagram messages", clientId: "evergreen" },
-  { id: "uf-form-trial", name: "7-day trial form", clientId: "urbanfit" },
-  { id: "aa-form-botox", name: "Botox consultation form", clientId: "aura" },
-  { id: "sr-form-estimate", name: "Roof estimate form", clientId: "summit" },
-  { id: "ba-form-admission", name: "Admissions enquiry form", clientId: "brightpath" },
-  { id: "hr-msg-listing", name: "Listing message thread", clientId: "hearth" },
-  { id: "pa-form-service", name: "Service booking form", clientId: "primeauto" },
-  { id: "li-form-consult", name: "Fertility consult form", clientId: "lotus" },
-  { id: "bt-form-package", name: "Holiday package form", clientId: "bluebay" },
-  { id: "pl-form-case", name: "Case evaluation form", clientId: "pinnacle" }
-];
-
-const clientAccess = [
-  { clientId: "northstar", admin: "admin@northstardental.example", viewers: 3, status: "Active", auth: "Invite login + MFA" },
-  { clientId: "evergreen", admin: "ops@evergreenmedspa.example", viewers: 2, status: "Active", auth: "Invite login + MFA" },
-  { clientId: "urbanfit", admin: "manager@urbanfit.example", viewers: 4, status: "Pending", auth: "Invite sent" },
-  { clientId: "aura", admin: "frontdesk@auraaesthetics.example", viewers: 1, status: "Active", auth: "Invite login + MFA" },
-  { clientId: "summit", admin: "sales@summitroofing.example", viewers: 5, status: "Active", auth: "Invite login + MFA" },
-  { clientId: "brightpath", admin: "principal@brightpath.example", viewers: 2, status: "Active", auth: "Invite login + MFA" }
-];
-
-let leads = [
-  makeLead("L-1008", "Avery Brooks", "northstar", "Lead Form Submission", "Hot Lead", "New Lead", "Maya Chen", -35, "Appointment/Consultation", "ns-form-implant", "San Francisco", "Implants"),
-  makeLead("L-1007", "Priya Shah", "evergreen", "WhatsApp Lead", "Warm Lead", "Contacted", "Sofia Alvarez", -240, "Service enquiry", "eg-msg-ig", "Austin", "Skin assessment"),
-  makeLead("L-1006", "Marcus Lee", "urbanfit", "Lead Form Submission", "Cold Lead", "Follow-up Required", "Leo Grant", -420, "Price enquiry", "uf-form-trial", "Chicago", "Fitness trial"),
-  makeLead("L-1005", "Nina Patel", "northstar", "Engagement Lead", "Cold Lead", "Qualified", "Arjun Mehta", -800, "General engagement", "ns-page-main", "San Jose", "Dental cleaning"),
-  makeLead("L-1004", "Oliver Kim", "evergreen", "Lead Form Submission", "Hot Lead", "Appointment Booked", "Sofia Alvarez", -1220, "Callback", "eg-form-skin", "Austin", "Laser treatment"),
-  makeLead("L-1003", "Test User", "urbanfit", "Website Lead", "Cold Lead", "Invalid Lead", "Leo Grant", -1600, "Spam/Test", "uf-form-trial", "Dallas", "Trial")
-];
-
-let audit = [
-  "Webhook delivery accepted for L-1008",
-  "Rule v1 classified Avery Brooks as Hot",
-  "Digest preview generated for Evergreen Med Spa",
-  "Asset eg-msg-ig mapped to Evergreen Med Spa",
-  "Client export requested by Northstar Dental admin"
-];
+const clients = [{ id: "all", name: "All Accounts" }];
+const users = [];
+const assets = [{ id: "all", name: "All Locations", clientId: "all" }];
+const clientAccess = [];
+let leads = [];
+let audit = [];
 
 let activeView = "Home";
 let activeSavedView = "All";
@@ -177,6 +124,7 @@ function localDemoApi(path, options = {}) {
     }
     return { user: savedUser, demoMode: true };
   }
+  if (path === "/leads") return { leads: [] };
   throw new Error("This feature requires the MongoDB API at http://localhost:4000.");
 }
 
@@ -197,6 +145,42 @@ function applyAuthenticatedUser(user) {
   $("#authScreen").hidden = true;
   $("#appShell").hidden = false;
   render();
+  void loadRealWorkspaceData();
+}
+
+async function loadRealWorkspaceData() {
+  try {
+    const result = await api("/leads");
+    leads = (result.leads || []).map(normalizeApiLead);
+    render();
+  } catch (error) {
+    leads = [];
+    render();
+    showToast(error.message || "Could not load leads");
+  }
+}
+
+function normalizeApiLead(lead) {
+  const received = new Date(lead.received || lead.createdAt || Date.now());
+  return {
+    ...lead,
+    id: lead.id,
+    clientId: lead.clientId || "unassigned",
+    assetId: lead.assetId || "",
+    phone: lead.phone || "",
+    email: lead.email || "",
+    owner: lead.owner || "Unassigned",
+    campaign: lead.campaign || "Unassigned campaign",
+    service: lead.service || "General enquiry",
+    location: lead.location || "Unassigned",
+    intent: lead.intent || "",
+    received,
+    due: lead.due ? new Date(lead.due) : new Date(received.getTime() + 2 * 60 * 60 * 1000),
+    notes: lead.notes || [],
+    latestAction: lead.latestAction || "Lead received",
+    confidence: 0,
+    reason: "Stored source record"
+  };
 }
 
 function showAuth() {
@@ -445,10 +429,11 @@ function sectionHeader(title, subtitle, stats = []) {
 }
 
 function renderHome() {
+  const data = visibleLeads();
   const cards = [
     ["View Leads", "Leads", "Browse and manage all your leads", "blue", "♙", ""],
     ["Lead Pipeline", "Pipeline", "Track lead progress across stages", "green", "▥", ""],
-    ["Follow-ups", "Follow-ups", "View and manage follow-up tasks", "orange", "□", "12"],
+    ["Follow-ups", "Follow-ups", "View and manage follow-up tasks", "orange", "□", ""],
     ["Reports", "Reports", "Analyze performance and trends", "purple", "◔", ""],
     ["Team Management", "Team", "Manage your team and permissions", "purple", "♙", ""],
     ["Meta Accounts", "Meta Accounts", "Manage connected meta accounts", "blue", "∞", ""],
@@ -466,10 +451,10 @@ function renderHome() {
       ${cards.map(([title, view, desc, tone, icon, badge]) => `<button class="nav-card" type="button" data-jump="${view}"><span class="card-icon ${tone}">${iconFor(view)}</span><span class="card-copy"><strong>${title}</strong><small>${desc}</small></span>${badge ? `<em>${badge}</em>` : ""}</button>`).join("")}
     </div>
     <div class="grid simple-kpis">
-      ${homeKpi("New Leads", "128", "18%", "vs last 7 days", "blue", "♙")}
-      ${homeKpi("Follow-ups Due", "32", "12%", "vs yesterday", "orange", "□")}
-      ${homeKpi("Qualified Leads", "86", "24%", "vs last 7 days", "green", "✓")}
-      ${homeKpi("Pending Leads", "312", "8%", "vs last 7 days", "purple", "◴")}
+      ${homeKpi("New Leads", data.filter(lead => lead.status === "New Lead").length, "", "live MongoDB data", "blue", "")}
+      ${homeKpi("Follow-ups Due", data.filter(isOverdue).length, "", "live MongoDB data", "orange", "")}
+      ${homeKpi("Qualified Leads", data.filter(lead => lead.status === "Qualified").length, "", "live MongoDB data", "green", "")}
+      ${homeKpi("Pending Leads", data.filter(lead => !["Converted", "Closed", "Invalid Lead"].includes(lead.status)).length, "", "live MongoDB data", "purple", "")}
     </div>
     <section class="analytics-workspace card">
       <div class="analytics-head">
@@ -478,17 +463,17 @@ function renderHome() {
       </div>
       <div class="analytics-grid">
         <div class="audience-panel">
-          <div class="panel-title"><h3>Lead quality</h3><span>1,248 total</span></div>
-          <div class="donut-chart"><div><strong>68%</strong><span>qualified</span></div></div>
-          <div class="chart-legend"><span><i class="legend-purple"></i>Hot 38%</span><span><i class="legend-pink"></i>Warm 30%</span><span><i class="legend-gray"></i>Cold 32%</span></div>
+          <div class="panel-title"><h3>Lead quality</h3><span>${data.length} total</span></div>
+          <div class="donut-chart"><div><strong>${data.length ? Math.round(data.filter(lead => lead.status === "Qualified").length / data.length * 100) : 0}%</strong><span>qualified</span></div></div>
+          <div class="chart-legend"><span><i class="legend-purple"></i>Hot ${data.filter(lead => lead.quality === "Hot Lead").length}</span><span><i class="legend-pink"></i>Warm ${data.filter(lead => lead.quality === "Warm Lead").length}</span><span><i class="legend-gray"></i>Cold ${data.filter(lead => lead.quality === "Cold Lead").length}</span></div>
         </div>
         <div class="trend-panel">
           <div class="panel-title"><h3>Performance</h3><div class="chart-legend"><span><i class="legend-purple"></i>Leads</span><span><i class="legend-green"></i>Qualified</span><span><i class="legend-orange"></i>Booked</span></div></div>
           <svg class="trend-chart" viewBox="0 0 760 220" role="img" aria-label="Lead performance trend over 30 days">
             <g class="chart-grid"><line x1="20" y1="40" x2="740" y2="40"/><line x1="20" y1="90" x2="740" y2="90"/><line x1="20" y1="140" x2="740" y2="140"/><line x1="20" y1="190" x2="740" y2="190"/></g>
-            <polyline class="line leads-line" points="20,150 70,142 120,155 170,126 220,132 270,102 320,112 370,78 420,98 470,72 520,84 570,58 620,76 670,46 740,34"/>
-            <polyline class="line qualified-line" points="20,172 70,166 120,169 170,151 220,158 270,138 320,142 370,124 420,130 470,112 520,117 570,101 620,106 670,90 740,82"/>
-            <polyline class="line booked-line" points="20,190 70,186 120,188 170,179 220,181 270,168 320,173 370,160 420,166 470,153 520,157 570,145 620,149 670,137 740,130"/>
+            <polyline class="line leads-line" points="${data.length ? "20,170 200,150 380,130 560,100 740,70" : ""}"/>
+            <polyline class="line qualified-line" points="${data.length ? "20,190 200,180 380,165 560,145 740,125" : ""}"/>
+            <polyline class="line booked-line" points="${data.length ? "20,200 200,195 380,185 560,175 740,160" : ""}"/>
           </svg>
           <div class="chart-axis"><span>May 1</span><span>May 8</span><span>May 15</span><span>May 22</span><span>May 30</span></div>
         </div>
@@ -498,13 +483,7 @@ function renderHome() {
       <section class="card pad activity-card">
         <h2>Recent Activity</h2>
         <div class="activity-list">
-          ${[
-            ["userPlus", "green", "Rohit Verma assigned lead to Neha Singh", "Lead: Arjun Mehta | Campaign: Knee Pain Relief", "10 mins ago"],
-            ["message", "whatsapp", "WhatsApp message sent to +91 98765 43210", "Lead: Priya Sharma | Template: Initial Contact", "25 mins ago"],
-            ["chart", "orange", "Lead status updated to Qualified", "Lead: Vikram Malhotra | By: Neha Singh", "45 mins ago"],
-            ["clock", "blue", "Follow-up scheduled with Rajesh Gupta", "Date: May 24, 2025 at 04:00 PM | Type: WhatsApp", "1 hr ago"],
-            ["note", "purple", "Note added to Sneha Iyer", "By: Rohit Verma", "2 hrs ago"]
-          ].map(([icon, tone, title, detail, time]) => `<div class="activity-row"><span class="mini-icon ${tone}">${iconSvg(icon,16)}</span><div><strong>${title}</strong><small>${detail}</small></div><time>${time}</time></div>`).join("")}
+          ${audit.length ? audit.slice(0, 5).map(title => `<div class="activity-row"><span class="mini-icon purple">${iconSvg("list",16)}</span><div><strong>${title}</strong><small>Workspace activity</small></div><time>Recent</time></div>`).join("") : `<p class="muted">No activity yet. Real lead events will appear here.</p>`}
         </div>
         <button class="text-link" type="button">View All Activity →</button>
       </section>
@@ -529,10 +508,10 @@ function renderHome() {
             <button class="text-link" type="button" data-jump="Reports">View Report →</button>
           </div>
           <div class="perf-grid">
-            <div><span>Leads Handled</span><strong>230</strong></div>
-            <div><span>Follow-ups Done</span><strong>98</strong></div>
-            <div><span>Qualified Leads</span><strong>45</strong></div>
-            <div><span>Conversion Rate</span><strong>19.6%</strong></div>
+            <div><span>Leads Handled</span><strong>${data.length}</strong></div>
+            <div><span>Follow-ups Done</span><strong>${data.filter(lead => ["Contacted", "Qualified", "Appointment Booked", "Converted"].includes(lead.status)).length}</strong></div>
+            <div><span>Qualified Leads</span><strong>${data.filter(lead => lead.status === "Qualified").length}</strong></div>
+            <div><span>Conversion Rate</span><strong>${data.length ? Math.round(data.filter(lead => lead.status === "Converted").length / data.length * 100) : 0}%</strong></div>
           </div>
         </section>
       </div>
@@ -542,7 +521,7 @@ function renderHome() {
 
 function homeKpi(label, value, delta, helper, tone, icon) {
   const names = { "New Leads": "users", "Follow-ups Due": "clock", "Qualified Leads": "shield", "Pending Leads": "clock" };
-  return `<section class="home-kpi card"><div><span>${label}</span><strong>${value}</strong><small>↑ ${delta} <em>${helper}</em></small></div><span class="card-icon ${tone}">${iconSvg(names[label] || "chart",19)}</span></section>`;
+  return `<section class="home-kpi card"><div><span>${label}</span><strong>${value}</strong><small>${delta ? `↑ ${delta} ` : ""}<em>${helper}</em></small></div><span class="card-icon ${tone}">${iconSvg(names[label] || "chart",19)}</span></section>`;
 }
 
 function renderOverview() {
@@ -1398,17 +1377,25 @@ function hydrateStaticIcons() {
   });
 }
 
-function saveLeadUpdate() {
+async function saveLeadUpdate() {
   const lead = leads.find((item) => item.id === state.selectedLeadId);
   if (!lead) return;
-  lead.status = $("#detailStatus").value;
-  lead.owner = $("#detailOwner").value;
+  const status = $("#detailStatus").value;
+  const owner = $("#detailOwner").value;
   const note = $("#detailNote").value.trim();
-  if (note) lead.notes.unshift(note);
-  lead.latestAction = `${lead.status} by ${lead.owner}`;
-  audit.unshift(`${lead.id} updated to ${lead.status} by ${currentRole().label}`);
-  closeLead();
-  render();
+  try {
+    const result = await api(`/leads/${lead.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status, owner, notes: note ? [note, ...lead.notes] : lead.notes })
+    });
+    const updated = normalizeApiLead(result.lead);
+    leads = leads.map(item => item.id === updated.id ? updated : item);
+    audit.unshift(`${updated.name} updated to ${updated.status}`);
+    closeLead();
+    render();
+  } catch (error) {
+    showToast(error.message || "Lead update failed");
+  }
 }
 
 function closeLead() {
@@ -1418,17 +1405,7 @@ function closeLead() {
 }
 
 function ingestMockLead() {
-  const clientChoices = ["northstar", "evergreen", "urbanfit"];
-  const clientId = clientChoices[Math.floor(Math.random() * clientChoices.length)];
-  const asset = assets.find((item) => item.clientId === clientId);
-  const id = `L-${1000 + leads.length + 3}`;
-  const newLead = makeLead(id, "Jordan Rivera", clientId, "Lead Form Submission", "Hot Lead", "New Lead", "Maya Chen", -1, "Appointment/Consultation", asset.id, "New York", "Consultation");
-  leads.unshift(newLead);
-  audit.unshift(`Webhook replay accepted once for ${id}`);
-  $("#healthPill").textContent = "Test lead visible";
-  $("#liveChip").innerHTML = "<span></span> Live update received";
-  activeView = "Leads";
-  render();
+  showToast("Connect Meta or use POST /api/leads to add real data");
 }
 
 function findLead(id) {

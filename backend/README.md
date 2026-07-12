@@ -47,6 +47,11 @@ The repository includes `api/index.js`, a root `package.json`, and an explicit `
 - `POST /api/users`
 - `PATCH /api/users/:id`
 - `POST /api/users/:id/revoke-sessions`
+- `GET /api/leads`
+- `POST /api/leads`
+- `PATCH /api/leads/:id`
+
+The production dashboard contains no seeded operational records. After authentication it loads organization-scoped leads from MongoDB. A new workspace therefore starts empty until records are created through `/api/leads` or ingested from a connected Meta source.
 
 ## Roles
 
